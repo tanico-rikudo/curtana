@@ -1,0 +1,2 @@
+# curtana
+Edinet fetcher
