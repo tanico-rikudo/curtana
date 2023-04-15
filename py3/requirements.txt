@@ -29,3 +29,7 @@ xgboost
 lightgbm
 esptool
 selenium
+xbrl
+arelle
+lxml
+isodate
