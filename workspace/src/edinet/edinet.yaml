@@ -1,0 +1,10 @@
+api:
+  base_path: https://disclosure.edinet-fsa.go.jp/api/v1
+
+taxonomy:
+  shareholder_buyback_key: AcquisitionsByResolutionOfShareholdersMeetingTextBlock
+  board_buyback_key: AcquisitionsByResolutionOfBoardOfDirectorsMeetingTextBlock
+
+proxy:
+  http_proxy: 10.149.101.1:8081
+  https_proxy: 10.149.101.1:8081
