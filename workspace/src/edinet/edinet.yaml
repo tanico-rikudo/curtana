@@ -1,3 +1,5 @@
+local:
+  data_folder_path: /workspace/data
 api:
   base_path: https://disclosure.edinet-fsa.go.jp/api/v1
 

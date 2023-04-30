@@ -1,18 +1,28 @@
 version: "3.9"
 services:
+  postgresql:
+    container_name: postgresql
+    build:
+      context: ./postgresql
+      dockerfile: Dockerfile
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data
+      - ./postgresql/init:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    restart: always
+
   py3:
+    container_name: python
     build:
       context: ./py3
       dockerfile: Dockerfile
     restart: always
     entrypoint: >
-      jupyter-lab
-      --allow-root
-      --ip=0.0.0.0
-      --port=8888
-      --no-browser
-      --NotebookApp.token=''
-      --notebook-dir=/workspace
+      jupyter-lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --notebook-dir=/workspace
     expose:
       - "8888"
     ports:
@@ -20,7 +30,6 @@ services:
     volumes:
       - ./py3/root_jupyter:/root/.jupyter
       - ./workspace:/workspace
-
     # GPUを使う場合の設定
     # environment:
     #   - "NVIDIA_VISIBLE_DEVICES=all"
@@ -31,3 +40,6 @@ services:
     #       devices:
     #         - capabilities:
     #           - gpu
+
+volumes:
+  postgres_volume:
