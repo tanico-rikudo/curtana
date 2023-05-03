@@ -9,7 +9,6 @@ import-ipynb
 numpy
 pandas
 scipy
-scikit-learn
 pycaret
 matplotlib
 japanize_matplotlib
@@ -33,3 +32,7 @@ xbrl
 arelle
 lxml
 isodate
+sqlalchemy
+psycopg2
+fastapi
+uvicorn

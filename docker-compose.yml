@@ -15,31 +15,53 @@ services:
       POSTGRES_PASSWORD: pass
     restart: always
 
-  py3:
-    container_name: python
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    ports:
+      - 8080:80
+    volumes:
+      - volume_pgadmin:/var/lib/pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: kazuyo.rikudo@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: pass
+    depends_on:
+      - postgresql
+
+  edinet_api:
+    container_name: edinet_api
     build:
-      context: ./py3
+      context: ./edinet_api
       dockerfile: Dockerfile
     restart: always
     entrypoint: >
-      jupyter-lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --notebook-dir=/workspace
+      jupyter-lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --notebook-dir=/workspace　&& uvicorn main:app --reload
     expose:
-      - "8888"
+      - 8888
+      - 8009
     ports:
-      - "127.0.0.1:8888:8888"
+      - 127.0.0.1:8888:8888
+      - 127.0.0.1:8000:8000
     volumes:
-      - ./py3/root_jupyter:/root/.jupyter
-      - ./workspace:/workspace
-    # GPUを使う場合の設定
-    # environment:
-    #   - "NVIDIA_VISIBLE_DEVICES=all"
-    #   - "NVIDIA_DRIVER_CAPABILITIES=all"
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - capabilities:
-    #           - gpu
+      - ./edinet_api/root_jupyter:/opt/app/.jupyter
+      - ./edinet_api:/opt/app:cached
+
+  web:
+    container_name: web
+    build:
+      context:  ./nextjs
+      dockerfile: Dockerfile
+    tty: true
+    ports:
+      - 3000:3000
+    volumes:
+      - ./nextjs:/opt/app:cached
+      - web_node_modules:/opt/app/node_modules
+    environment:
+      - WATCHPACK_POLLING=true
+    command: sh -c "npm run dev"
 
 volumes:
   postgres_volume:
+  volume_pgadmin:
+  web_node_modules:

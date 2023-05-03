@@ -1,4 +1,4 @@
-FROM python:3.9.7-buster
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
@@ -17,3 +17,5 @@ RUN mkdir -p /root/src
 COPY requirements.txt /root/src
 WORKDIR /root/src
 RUN pip install -r requirements.txt
+
+WORKDIR /opt/app
