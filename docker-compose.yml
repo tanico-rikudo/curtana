@@ -35,25 +35,30 @@ services:
       dockerfile: Dockerfile
     restart: always
     entrypoint: >
-      jupyter-lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --notebook-dir=/workspace　&& uvicorn main:app --reload
+      uvicorn main:app --host 0.0.0.0  --reload  --port=8000
     expose:
-      - 8888
-      - 8009
+      - 8000
+      - 888
+      - 8001
     ports:
-      - 127.0.0.1:8888:8888
       - 127.0.0.1:8000:8000
+      - 127.0.0.1:8001:8001
+      - 127.0.0.1:8888:8888
     volumes:
-      - ./edinet_api/root_jupyter:/opt/app/.jupyter
-      - ./edinet_api:/opt/app:cached
+      - ./edinet_api:/opt/app
+      - ./edinet_api/root_jupyter:/root/.jupyter
+    env_file:
+      - ./edinet_api/edinet.env
 
   web:
     container_name: web
     build:
-      context:  ./nextjs
+      context: ./nextjs
       dockerfile: Dockerfile
     tty: true
     ports:
       - 3000:3000
+      - 5555:5555
     volumes:
       - ./nextjs:/opt/app:cached
       - web_node_modules:/opt/app/node_modules

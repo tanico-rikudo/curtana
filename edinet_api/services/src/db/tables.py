@@ -5,7 +5,7 @@ import os
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Double, DATE, func
 from sqlalchemy.orm import declarative_base
 
-logging.basicConfig(filename=os.path.join(os.environ["HOME_PATH"], 'log/edinet.log'),
+logging.basicConfig(filename=os.path.join(os.environ["LOG_PATH"], 'edinet.log'),
                     encoding='utf-8',
                     level=logging.INFO)
 Base = declarative_base()
@@ -33,8 +33,8 @@ class BuyBackHeadline(Base):
             "doc_type_code": self.doc_type_code,
             "submit_datetime": self.submit_datetime,
             "xbrl_flag": self.xbrl_flag,
-            "insert_date": self.insert_date,
-            "update_date": self.update_date
+            "created_on": self.created_on,
+            "updated_on": self.updated_on
         }
 
 
@@ -56,7 +56,7 @@ class BuyBackDetail(Base):
             "buy_date": self.buy_date,
             "buy_qty": self.buy_qty,
             "buy_notional": self.buy_notional,
-            "insert_date": self.insert_date,
-            "update_date": self.update_date
+            "created_on": self.created_on,
+            "updated_on": self.updated_on
         }
 

@@ -14,7 +14,7 @@ import logging
 from ..db.tables import BuyBackHeadline, BuyBackDetail
 from ..db.client import DBclient
 
-logging.basicConfig(filename=os.path.join(os.environ["HOME_PATH"], 'log/edinet.log'),
+logging.basicConfig(filename=os.path.join(os.environ["LOG_PATH"], 'edinet.log'),
                     encoding='utf-8',
                     level=logging.INFO)
 
@@ -34,7 +34,7 @@ class Edinet:
         pass
 
     def load_config(self, config_path=None):
-        config_path = os.path.join(os.environ["HOME_PATH"], 'src/edinet/edinet.yaml') \
+        config_path = os.path.join(os.environ["INI_PATH"], 'edinet.yaml') \
             if config_path is None else config_path
         try:
             with open(config_path) as file:
@@ -353,7 +353,7 @@ class Edinet:
         # if date is over year. fix it
         idxs = df_daily.loc[df_daily.date_full > df_daily.submit_date].index
         if len(idxs) > 0:
-            logging.info("[Fixing...] Over year submission")
+            logging.info(f"[Fixing...] Over year submission. doc_id={doc_id}")
             logging.info(f"{df_daily.loc[idxs,:]}")
 
             for idx in idxs:

@@ -1,6 +1,6 @@
 import time
 
-from src.edinet.edinet import *
+from services.src.edinet.edinet import *
 
 
 def update_headline(date):
@@ -8,6 +8,7 @@ def update_headline(date):
     zip_file_paths = fetch_edinet_buyback_details(buyback_headlines=buyback_headlines)
     cleaned_details = process_edinet_buyback_details(zip_file_paths=zip_file_paths)
     return cleaned_details
+
 
 def fetch_edinet_buyback_headlines(date):
     """
@@ -45,17 +46,19 @@ def fetch_edinet_buyback_details(buyback_headlines):
     # get document set
     zip_file_paths = []
     for buyback_headline in buyback_headlines:
-        time.sleep(1.0)
-        doc_id = buyback_headline.get("docID")
-        submit_datetime = buyback_headline.get("submitDateTime")
-        submit_date = submit_datetime.split()[0].replace("-", "")
-        zip_file_path = {"doc_id": doc_id,
-                         "submit_datetime": submit_datetime,
-                         "filepaths": edinet_obj.fetch_xbrl(doc_id=doc_id,
-                                                            folder_path=os.path.join(edinet_obj.local_data_path,
-                                                                                     submit_date))}
-        zip_file_paths.append(zip_file_path)
-
+        try:
+            time.sleep(1.0)
+            doc_id = buyback_headline.get("docID")
+            submit_datetime = buyback_headline.get("submitDateTime")
+            submit_date = submit_datetime.split()[0].replace("-", "")
+            zip_file_path = {"doc_id": doc_id,
+                             "submit_datetime": submit_datetime,
+                             "filepaths": edinet_obj.fetch_xbrl(doc_id=doc_id,
+                                                                folder_path=os.path.join(edinet_obj.local_data_path,
+                                                                                         submit_date))}
+            zip_file_paths.append(zip_file_path)
+        except Exception as e:
+            logging.warning(f"[Skip] Failure fetch Edinet buyback detail:{e}")
     return zip_file_paths
 
 
@@ -66,23 +69,28 @@ def process_edinet_buyback_details(zip_file_paths):
     details = []
     for zip_file_path in zip_file_paths:
 
-        # Fetch xbrf files
-        xbrf_file_paths = edinet_obj.get_xbrl_directories(zip_file_path.get("filepaths"))
+        try:
 
-        # parse xbrf
-        detail_figures = []
-        for xbrf_file_path in xbrf_file_paths:
-            detail_figure = {"figures": edinet_obj.parse_buyback_xbrf_form(xbrf_file_path),
-                             "file_path": xbrf_file_path}
-            detail_figures.append(detail_figure)
+            # Fetch xbrf files
+            xbrf_file_paths = edinet_obj.get_xbrl_directories(zip_file_path.get("filepaths"))
 
-        #  Add Optional root value.
-        detail = {"doc_id": zip_file_path["doc_id"],
-                  "submit_datetime": zip_file_path["submit_datetime"],
-                  "filer_name": zip_file_path["filer_name"],
-                  "details": detail_figures}
+            # parse xbrf
+            detail_figures = []
+            for xbrf_file_path in xbrf_file_paths:
+                detail_figure = {"figures": edinet_obj.parse_buyback_xbrf_form(xbrf_file_path),
+                                 "file_path": xbrf_file_path}
+                detail_figures.append(detail_figure)
 
-        details.append(detail)
+            #  Add Optional root value.
+            detail = {"doc_id": zip_file_path["doc_id"],
+                      "submit_datetime": zip_file_path["submit_datetime"],
+                      # "filer_name": zip_file_path["filer_name"],
+                      "details": detail_figures}
+            details.append(detail)
+
+
+        except Exception as e:
+            logging.warning(f"[Skip] Failure parsing Edinet buyback detail:{e}")
 
     cleaned_details = []
     logging.warning(f"[Running...] Detail deta cleaning")
@@ -90,7 +98,7 @@ def process_edinet_buyback_details(zip_file_paths):
         try:
             cleaned_details.extend(edinet_obj.clean_buyback_fetch_data(fetched_raw_data=detail))
         except Exception as e:
-            logging.warning(f"[Failure] Detail deta cleaning.: {e}", exc_info=True)
+            logging.warning(f"[Skip] Failure Detail deta cleaning.: {e}", exc_info=True)
     logging.warning(f"[DONE] Detail deta cleaning.")
 
     edinet_obj.save_detail(details=cleaned_details)

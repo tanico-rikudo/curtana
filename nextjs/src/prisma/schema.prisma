@@ -1,0 +1,31 @@
+// schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model buyback_headline {
+  id            Int @default(autoincrement()) @id
+  edinet_code   String
+  doc_id        String
+  filer_name    String
+  doc_type_code String
+  xbrl_flag     Boolean
+  submit_datetime DateTime
+  created_on    DateTime @default(now()) @map("created_on")
+  updated_on    DateTime @updatedAt @map("updated_on")
+}
+
+model buyback_detail {
+  id            Int @default(autoincrement()) @id
+  doc_id        String
+  buy_qty       Float
+  buy_date      DateTime
+  buy_notional  Float
+  created_on   DateTime @default(now()) @map("created_on")
+  updated_on   DateTime @updatedAt @map("updated_on")
+}
