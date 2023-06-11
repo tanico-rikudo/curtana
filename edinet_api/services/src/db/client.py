@@ -1,9 +1,10 @@
-import logging
 import os
 import sys
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 from .tables import BuyBackHeadline, BuyBackDetail
+from edinet_logging import EdinetLogger
+logger = EdinetLogger.get_loggger()
 
 class DBclient:
     def __init__(self):
@@ -31,11 +32,11 @@ class DBclient:
         ret = []
 
         try:
-            query_result = session.query(BuyBackHeadline).order_by(BuyBackHeadline.id)
-            ret = [ dict(target) for  target in query_result]
-            logging.info("[DONE Executed headline data")
+            query_results = session.query(BuyBackHeadline).order_by(BuyBackHeadline.id).all()
+            ret = [ target.get_dict() for  target in query_results]
+            logger.info("[DONE] Executed headline data")
         except Exception as e:
-            logging.warning(f"[Failure] Cannot execute sql:{e}",exc_info=True)
+            logger.warning(f"[Failure] Cannot execute sql:{e}",exc_info=True)
         finally:
             self.end_session(session)
         return ret
@@ -45,9 +46,9 @@ class DBclient:
         try:
             session.bulk_save_objects(buyback_objects)
             session.commit()
-            logging.info(f"[DONE] Inserted bulk data. Cnt={len(buyback_objects)}")
+            logger.info(f"[DONE] Inserted bulk data. Cnt={len(buyback_objects)}")
         except Exception as e:
-            logging.warning(f"[Failure] Cannot execute sql:{e}",exc_info=True)
+            logger.warning(f"[Failure] Cannot execute sql:{e}",exc_info=True)
         finally:
             self.end_session(session)
 
@@ -55,11 +56,11 @@ class DBclient:
         session = self.init_session()
         ret = []
         try:
-            query_result = session.query(BuyBackDetail).order_by(BuyBackDetail.id)
-            ret = [ dict(target) for  target in query_result]
-            logging.info("[DONE Executed detail data")
+            query_result = session.query(BuyBackDetail).order_by(BuyBackDetail.id).all()
+            ret = [ target.get_dict() for  target in query_result]
+            logger.info("[DONE Executed detail data")
         except Exception as e:
-            logging.warning(f"[Failure] Cannot execute sql:{e}", exc_info=True)
+            logger.warning(f"[Failure] Cannot execute sql:{e}", exc_info=True)
         finally:
             self.end_session(session)
         return ret

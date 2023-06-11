@@ -1,14 +1,33 @@
+import os
 import time
+from services.src.edinet.edinet import Edinet
+from edinet_logging import EdinetLogger
+logger = EdinetLogger.get_loggger()
 
-from services.src.edinet.edinet import *
+def get_detail(date=None):
+    edinet_obj = Edinet()
+    result = edinet_obj.get_details()
+    return result
+
+def get_headlines(date=None):
+    edinet_obj = Edinet()
+    result = edinet_obj.get_headlines()
+    return result
 
 
-def update_headline(date):
-    buyback_headlines = fetch_edinet_buyback_headlines(date=date)
-    zip_file_paths = fetch_edinet_buyback_details(buyback_headlines=buyback_headlines)
-    cleaned_details = process_edinet_buyback_details(zip_file_paths=zip_file_paths)
+def update_headline(date,doc_type):
+    assert  doc_type in ["buyback","buyback_amend"], f"invalid doc_type: {doc_type}"
+    if doc_type == "buyback":
+        buyback_headlines = fetch_edinet_buyback_headlines(date=date)
+        zip_file_paths = fetch_edinet_buyback_details(buyback_headlines=buyback_headlines)
+        cleaned_details = process_edinet_buyback_details(zip_file_paths=zip_file_paths)
+    else:
+        raise NotImplemented("buy back amend")
+        # buyback_headlines = fetch_edinet_buyback_headlines(date=date)
+        # zip_file_paths = fetch_edinet_buyback_details(buyback_headlines=buyback_headlines)
+        # cleaned_details = process_edinet_buyback_details(zip_file_paths=zip_file_paths)
+
     return cleaned_details
-
 
 def fetch_edinet_buyback_headlines(date):
     """
@@ -27,7 +46,9 @@ def fetch_edinet_buyback_headlines(date):
     raw_headlines = edinet_obj.fetch_headlines(date)
     buyback_headlines = [headline for headline in raw_headlines.get("results") if
                          edinet_obj.filter_headline(headline, doc_type_code="220")]
+    buyback_headlines = [ edinet_obj.clean_headline(headline=headline) for headline in buyback_headlines ]
 
+    #save
     edinet_obj.save_headline(headlines=buyback_headlines)
     return buyback_headlines
 
@@ -58,7 +79,7 @@ def fetch_edinet_buyback_details(buyback_headlines):
                                                                                          submit_date))}
             zip_file_paths.append(zip_file_path)
         except Exception as e:
-            logging.warning(f"[Skip] Failure fetch Edinet buyback detail:{e}")
+            logger.warning(f"[Skip] Failure fetch Edinet buyback detail:{e}")
     return zip_file_paths
 
 
@@ -90,16 +111,16 @@ def process_edinet_buyback_details(zip_file_paths):
 
 
         except Exception as e:
-            logging.warning(f"[Skip] Failure parsing Edinet buyback detail:{e}")
+            logger.warning(f"[Skip] Failure parsing Edinet buyback detail:{e}")
 
     cleaned_details = []
-    logging.warning(f"[Running...] Detail deta cleaning")
+    logger.warning(f"[Running...] Detail deta cleaning")
     for detail in details:
         try:
             cleaned_details.extend(edinet_obj.clean_buyback_fetch_data(fetched_raw_data=detail))
         except Exception as e:
-            logging.warning(f"[Skip] Failure Detail deta cleaning.: {e}", exc_info=True)
-    logging.warning(f"[DONE] Detail deta cleaning.")
+            logger.warning(f"[Skip] Failure Detail deta cleaning.: {e}", exc_info=True)
+    logger.warning(f"[DONE] Detail deta cleaning.")
 
     edinet_obj.save_detail(details=cleaned_details)
 

@@ -1,0 +1,22 @@
+version: 1
+disable_existing_loggers: false
+formatters:
+  edinetFormatter:
+    format: '[%(asctime)s][%(levelname)s][%(module)s] %(message)s'
+    datefmt: '%Y/%m/%d %I:%M:%S'
+handlers:
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: edinetFormatter
+    filename: ./log/edinet.log
+    maxBytes: 1000
+    backupCount: 1
+loggers:
+  edinetLogger:
+    level: INFO
+    handlers: [file]
+    propagate: no
+root:
+  level: INFO
+  handlers: []

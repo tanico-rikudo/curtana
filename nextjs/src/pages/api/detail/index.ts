@@ -17,18 +17,30 @@ export default async function handler(
         origin: '*',
         optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
     });
+
+
     console.log("api")
     if (req.method == 'GET') {
-        let { startRow, endRow } = req.query as unknown as {
+        let { startRow, endRow, doc_id } = req.query as unknown as {
             startRow: string;
             endRow: string;
+            doc_id: string;
         };
-        const startRowInt = parseInt(startRow)
-        const endRowInt = parseInt(endRow)
+
+        let startRowInt = parseInt(startRow)
+        let endRowInt = parseInt(endRow)
+        startRowInt = startRowInt || 0
+        endRowInt = endRowInt || 1000
+        console.log("oo" + doc_id + "oo")
 
         const details = await prisma.buyback_detail.findMany({
-            take: endRowInt - startRowInt,
-            skip: startRowInt
+            // take: endRowInt - startRowInt,
+            // skip: startRowInt,
+            where: {
+                doc_id: {
+                    contains: doc_id
+                },
+            }
         })
         return res.status(200).json({ details });
     }

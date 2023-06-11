@@ -10,3 +10,12 @@ Edinet fetcher
  jupyter-lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --notebook-dir=/opt/app
  
 ```
+
+# URL
+- pgadmin
+  - http://localhost:8080/browser/
+- jupyter
+  - jupyter-lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --NotebookApp.token='' --notebook-dir=/opt/app
+- nodejs
+  - http://localhost:3000/
+- 

@@ -28,11 +28,7 @@ DetailHome.getLayout = function getLayout(page: ReactElement) {
 
 
 const renderDetail = (details) => {
-  // console.log("detail->index")
-  // console.log(details)
-
   return (
-    // <div>teeeee</div>
     <EdinetDetail details={details} />
   );
 };

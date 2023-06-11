@@ -8,6 +8,7 @@ import Header from "@/components/layouts/Header";
 
 import { SessionProvider, signIn, useSession } from "next-auth/react";
 import type { Session } from "next-auth/react";
+// import "react-datepicker/dist/react-datepicker.css"
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;

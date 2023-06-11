@@ -32,6 +32,7 @@
     "nextjs-cors": "^2.1.2",
     "pg": ">=8.10.0",
     "react": "18.2.0",
+    "react-datepicker": "^4.12.0",
     "react-dom": "18.2.0",
     "recoil": "^0.7.7",
     "styled-component": "^2.8.0",
@@ -43,6 +44,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "14.0.0",
+    "@types/react-datepicker": "^4.11.2",
     "@types/styled-components": "^5.1.26",
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "@typescript-eslint/parser": "^5.59.2",

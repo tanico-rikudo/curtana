@@ -1,11 +1,12 @@
 interface FlexProps {
   children: React.ReactNode
+  class_names: string;
 }
 
-const Flex = ({ children }: FlexProps) => {
+const Flex = ({ children, class_names }: FlexProps) => {
   return (
     <>
-      <div className="flex-initial w-32">{children}</div>
+      <div className={`${class_names}`}>{children}</div>
     </>
   )
 }

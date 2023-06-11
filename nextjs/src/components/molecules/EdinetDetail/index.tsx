@@ -13,76 +13,38 @@ import {
     IDatasource,
     IGetRowsParams,
 } from 'ag-grid-community';
+import { fetchDetails } from '@/utils/api';
 
 
 // export default function EdinetDetail(detail) {
-const EdinetDetail = () => {
+const EdinetDetail = ({ details }) => {
     console.log("modelcule detail->index")
 
-    const [columnDefs, setColumnDefs] = useState<ColDef[]>([
+    const [columnDefs] = useState([
         { field: 'buy_date', headerName: 'Date', filter: 'agDateColumnFilter' },
         { field: 'buy_qty', headerName: 'Quantity' },
         { field: 'buy_notional', headerName: 'Notional' },
         { field: 'doc_id', headerName: 'Document ID', filter: 'agTextColumnFilter', },
     ]);
 
-    const detailDatasource = {
-        getRows(params: IGetRowsParams) {
-            setTimeout(function () {
-                console.log('asking for ' + params.startRow + ' to ' + params.endRow);
-                const { startRow, endRow } = params;
-                const promise = fetch('api/detail?startRow=' + startRow + '&endRow=' + endRow, { method: 'GET' })
-                promise.then(response => {
-                    // レスポンスステータスのチェック。200以外でもresponseが返ればここへ来る。ネットワークエラー等の場合、then()にはこないでcatch()へ行く。
-                    if (response.status !== 200) {
-                        // 200以外ならばエラーメッセージを投げる
-                        throw `response.status = ${response.status}, response.statusText = ${response.statusText}`;
-                    }
-                    return response.json(); // jsonデータの取得結果をPromiseで返す。
-                }).then(response => {
-                    response = response.details
-                    params.successCallback(response, 499);
-                }).catch(err => {
-                    console.log(err);
-                    params.failCallback();
-                });
-            }, 500);
-        }
-    };
-
-    const onGridReady = useCallback((params: GridReadyEvent) => {
-        // setGridApi(params);
-        console.log("Callgr")
-        // register datasource with the grid
-        var dataSource: IDatasource = detailDatasource
-        // this.gridOptions.dataSource = dataSource
-        params.api.setDatasource(dataSource);
-    }, []);
-
-    const defaultColDef = useMemo<ColDef>(() => {
-        return {
-            resizable: true,
-            sortable: true,
-            filter: true,
-            floatingFilter: true
-        };
-    }, []);
+    const [defaultColDef] = useState({
+        resizable: true,
+        sortable: true,
+        filter: true,
+        floatingFilter: true
+    });
+    let data = []
+    if (details) {
+        data = details.details
+    }
+    console.log(data)
 
     return (
         <>
-            <div className="ag-theme-balham-dark" style={{ height: '600px' }}>
+            <div className="ag-theme-balham-dark px-4 py-3" style={{ height: '600px' }}>
                 <AgGridReact
+                    rowData={data}
                     columnDefs={columnDefs}
-                    defaultColDef={defaultColDef}
-                    rowBuffer={0}
-                    rowSelection={'multiple'}
-                    rowModelType={'infinite'}
-                    cacheBlockSize={100}
-                    cacheOverflowSize={2}
-                    maxConcurrentDatasourceRequests={1}
-                    infiniteInitialRowCount={200}
-                    maxBlocksInCache={10}
-                    onGridReady={onGridReady}
                 ></AgGridReact>
             </div>
         </>

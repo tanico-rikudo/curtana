@@ -1,4 +1,4 @@
-import logging
+
 import zipfile
 import os
 import pandas as pd
@@ -9,15 +9,11 @@ import requests
 import json
 import re
 import yaml
-import logging
 
 from ..db.tables import BuyBackHeadline, BuyBackDetail
 from ..db.client import DBclient
-
-logging.basicConfig(filename=os.path.join(os.environ["LOG_PATH"], 'edinet.log'),
-                    encoding='utf-8',
-                    level=logging.INFO)
-
+from edinet_logging import EdinetLogger
+logger = EdinetLogger.get_loggger()
 
 class Edinet:
     def __init__(self):
@@ -36,8 +32,9 @@ class Edinet:
     def load_config(self, config_path=None):
         config_path = os.path.join(os.environ["INI_PATH"], 'edinet.yaml') \
             if config_path is None else config_path
+        logger.info(config_path)
         try:
-            with open(config_path) as file:
+            with open(config_path, "r") as file:
                 yaml_obj = yaml.safe_load(file)
             self.config = yaml_obj
             self.api_base_path = self.config["api"]["base_path"]
@@ -45,10 +42,22 @@ class Edinet:
             self.tx_board_buyback_key = self.config["taxonomy"]["board_buyback_key"]
             self.local_data_path = self.config["local"]["data_folder_path"]
         except Exception as e:
-            logging.warning(f'Exception occurred while loading YAML...{e}', exc_info=True)
+            logger.warning(f'Exception occurred while loading YAML...{e}', exc_info=True)
 
     def init_db(self):
         self.db = DBclient()
+
+    def get_headlines(self):
+        logger.info(f"[Getting...] Headline in DB")
+        result = self.db.get_headline_data()
+        logger.info(f"[DONE] Get Headline from DB")
+        return result
+
+    def get_detail(self):
+        logger.info(f"[Getting...] Detail in DB")
+        result = self.db.get_detail_data()
+        logger.info(f"[DONE] Get Detail from DB")
+        return result
 
     def fetch_headlines(self, date):
         """
@@ -59,7 +68,7 @@ class Edinet:
             list: dict list
         """
         assert type(date) == str, "date must be string"
-        logging.info(f"[Fetching...] Headline date={date}")
+        logger.info(f"[Fetching...] Headline date={date}")
         headline_url = os.path.join(self.api_base_path, "documents.json")
         params = {"date": date, "type": 2}
 
@@ -70,7 +79,7 @@ class Edinet:
         proxies = None
         res = requests.get(headline_url, params=params, proxies=proxies, timeout=(5, 120))
         headlines = json.loads(res.content)
-        logging.info(f"[DONE] Fetched Headline date={date}")
+        logger.info(f"[DONE] Fetched Headline date={date}")
         return headlines
 
     @staticmethod
@@ -93,6 +102,28 @@ class Edinet:
                 return False
         return True
 
+    @staticmethod
+    def clean_headline(headline):
+        """
+        Headline Element cleaner
+        Args:
+            headline:
+
+        Returns:
+
+        """
+        try:
+            headline["edinet_code"]=headline.get("edinetCode")
+            headline["doc_id"]=headline.get("docID")
+            headline["filer_name"]=headline.get("filerName")
+            headline["doc_type_code"]=headline.get("docTypeCode")
+            headline["submit_datetime"]=headline.get("submitDateTime")
+            headline["xbrl_flag"]=headline.get("xbrlFlag") == "1"
+        except Exception as e:
+            logger.warning(f"[Failure] Save headline...:{e}", exc_info=True)
+
+        return headline
+
     def save_headline(self, headlines):
         objects = []
         for headline in headlines:
@@ -107,12 +138,12 @@ class Edinet:
                 )
                 objects.append(obj)
             except Exception as e:
-                logging.warning(f"[Failure] Save headline...:{e}", exc_info=True)
+                logger.warning(f"[Failure] Save headline...:{e}", exc_info=True)
 
         if len(objects) > 0:
             self.db.insert_data(buyback_objects=objects)
         else:
-            logging.warning("[Skip] Save headlines")
+            logger.warning("[Skip] Save headlines")
 
     def save_detail(self, details):
         objects = []
@@ -129,12 +160,12 @@ class Edinet:
                 )
                 objects.append(obj)
             except Exception as e:
-                logging.warning(f"[Failure] Save detail...:{e}", exc_info=True)
+                logger.warning(f"[Failure] Save detail...:{e}", exc_info=True)
 
         if len(objects) > 0:
             self.db.insert_data(buyback_objects=objects)
         else:
-            logging.warning("[Skip] Save details")
+            logger.warning("[Skip] Save details")
 
     def fetch_xbrl(self, doc_id, folder_path=None):
         """
@@ -145,7 +176,7 @@ class Edinet:
         Returns:
             str: download path
         """
-        logging.info(f"[Fetching...] Download xbrl zip. doc_id={doc_id}")
+        logger.info(f"[Fetching...] Download xbrl zip. doc_id={doc_id}")
         document_url = os.path.join(self.api_base_path, "documents", doc_id)
         params = {"type": "1"}
         res = requests.get(document_url, params=params, timeout=(5, 120))
@@ -157,9 +188,9 @@ class Edinet:
             with open(filepath, 'wb') as file:
                 for chunk in res.iter_content(chunk_size=1024):
                     file.write(chunk)
-                logging.info(f"[DONE] Download xbrl zip. doc_id={doc_id}, path={filepath}")
+                logger.info(f"[DONE] Download xbrl zip. doc_id={doc_id}, path={filepath}")
         else:
-            logging.error(f"[Failure] Invalid doc id or Fail to fetch data path. doc_id={doc_id}, {res}")
+            logger.error(f"[Failure] Invalid doc id or Fail to fetch data path. doc_id={doc_id}, {res}")
         return filepath
 
     @staticmethod
@@ -185,11 +216,11 @@ class Edinet:
                 if ext == ".xbrl" and "PublicDoc" in root:
                     xbrl_file_dir = os.path.join(zip_file_path, info.filename)
                     file_datas.append(xbrl_file_dir)
-                    logging.info(f"[DONE] Found xbrf file in {zip_file_path}")
+                    logger.info(f"[DONE] Found xbrf file in {zip_file_path}")
         except zipfile.BadZipFile as e:
-            logging.error(f"Fail to search xbrl directory: {zip_file_path}: {e}")
+            logger.error(f"Fail to search xbrl directory: {zip_file_path}: {e}")
 
-        logging.info(f"[DONE] Found {len(file_datas)} xbrf file in {zip_file_path}")
+        logger.info(f"[DONE] Found {len(file_datas)} xbrf file in {zip_file_path}")
 
         return file_datas
 
@@ -204,7 +235,7 @@ class Edinet:
         Returns:
             dict: result
         """
-        logging.info(f"[Loading...] Parse buybuck xbrf:{xbrl_file_path}")
+        logger.info(f"[Loading...] Parse buybuck xbrf:{xbrl_file_path}")
         ctrl = Cntlr.Cntlr(logFileName='logToPrint')
         model_xbrl = ctrl.modelManager.load(xbrl_file_path)
         data = {}
@@ -218,18 +249,18 @@ class Edinet:
         for fact in model_xbrl.facts:
             html = fact.value
             if fact.concept.qname.localName == "AcquisitionsByResolutionOfShareholdersMeetingTextBlock":
-                logging.info("[Parse...] AcquisitionsByResolutionOfShareholders ")
+                logger.info("[Parse...] AcquisitionsByResolutionOfShareholders ")
                 shareholder_data["acquition_type"] = "shareholder"
                 shareholder_data.update(Edinet.parse_buyback_table(html))
-                logging.info("[DONE] Parse AcquisitionsByResolutionOfShareholders ")
+                logger.info("[DONE] Parse AcquisitionsByResolutionOfShareholders ")
 
             if fact.concept.qname.localName == "AcquisitionsByResolutionOfBoardOfDirectorsMeetingTextBlock":
-                logging.info("[Parse...] AcquisitionsByResolutionOfBoardOfDirectors")
+                logger.info("[Parse...] AcquisitionsByResolutionOfBoardOfDirectors")
                 board_data["acquition_type"] = "board"
                 board_data.update(Edinet.parse_buyback_table(html))
-                logging.info("[DONE] Parse AcquisitionsByResolutionOfBoardOfDirectors")
+                logger.info("[DONE] Parse AcquisitionsByResolutionOfBoardOfDirectors")
 
-        logging.info(f"[DONE] Loaded Parse buybuck xbrf:{xbrl_file_path}")
+        logger.info(f"[DONE] Loaded Parse buybuck xbrf:{xbrl_file_path}")
         return {"shareholder_data": shareholder_data, "board_data": board_data}
 
     @staticmethod
@@ -246,12 +277,12 @@ class Edinet:
         bar_pattern = '.*[-ー－―]+'
         void_dt_pattern = '[月日\s]'
         report_result = {'daily': [], 'total': {}}
-        logging.info("[Parse...] Html ")
+        logger.info("[Parse...] Html ")
 
         try:
             table = soup.find_all("table")[1]  # only 1
         except Exception as e:
-            logging.warning("Fail to fetch data. No table elements")
+            logger.warning("Fail to fetch data. No table elements")
             return report_result
 
         try:
@@ -273,12 +304,12 @@ class Edinet:
                             value = int(cols[3].replace(',', ''))
                             if qty is not None:
                                 report_result['daily'].append({'date': dt, 'qty': qty, 'value': value})
-                                logging.info("Data: {0}".format(report_result['daily'][-1]))
+                                logger.info("Data: {0}".format(report_result['daily'][-1]))
                             else:
-                                logging.info("Data: No data")
+                                logger.info("Data: No data")
                                 pass
                         except Exception as e:
-                            logging.warning("No Daily")
+                            logger.warning("No Daily")
                             pass
                 if "計" in ele.get_text():
                     cols = [td.get_text().replace(",", "").replace(" ", "").replace("\n", "") for td in
@@ -288,15 +319,15 @@ class Edinet:
                         sum_value = int(cols[3].replace(',', ''))
                         if sum_qty is not None:
                             report_result['total'] = {'qty': sum_qty, 'value': sum_value}
-                            logging.info("Sum : {0}".format(report_result['total']))
+                            logger.info("Sum : {0}".format(report_result['total']))
                         else:
-                            logging.info("Sum: No data")
+                            logger.info("Sum: No data")
                     break
 
-            logging.info("[DONE] Parse Html ")
+            logger.info("[DONE] Parse Html ")
 
         except Exception as e:
-            logging.warning(f"[Failure] Parse HTML: {e}")
+            logger.warning(f"[Failure] Parse HTML: {e}")
 
         return report_result
 
@@ -318,7 +349,7 @@ class Edinet:
         daily_acquition_results = []
         total_acquition_results = []
 
-        logging.info(f"[Cleaning...] doc_id={doc_id}")
+        logger.info(f"[Cleaning...] doc_id={doc_id}")
 
         # cleaning
         for detail in details:
@@ -342,9 +373,9 @@ class Edinet:
         # count check
         if df_daily.shape[0] == 0:
             if df_total.shape[0] == 0:
-                logging.info(f"[PASS] doc_id={doc_id}. No dairy data")
+                logger.info(f"[PASS] doc_id={doc_id}. No dairy data")
             else:
-                logging.error(f"[Failure] doc_id={doc_id}. Dairy and Total are not same. {df_total}")
+                logger.error(f"[Failure] doc_id={doc_id}. Dairy and Total are not same. {df_total}")
             return []
 
         # add full date
@@ -353,8 +384,8 @@ class Edinet:
         # if date is over year. fix it
         idxs = df_daily.loc[df_daily.date_full > df_daily.submit_date].index
         if len(idxs) > 0:
-            logging.info(f"[Fixing...] Over year submission. doc_id={doc_id}")
-            logging.info(f"{df_daily.loc[idxs,:]}")
+            logger.info(f"[Fixing...] Over year submission. doc_id={doc_id}")
+            logger.info(f"{df_daily.loc[idxs,:]}")
 
             for idx in idxs:
                 srs = df_daily.loc[idx, :]
@@ -362,14 +393,14 @@ class Edinet:
 
         # if total qty is not same. invalid record
         if df_daily.qty.sum() != df_total.qty.sum():
-            logging.error(
+            logger.error(
                 f"[Failure]  doc_id={doc_id} Qty is not same. Daily:{df_daily.qty.sum()} != Total:{df_total.qty.sum()}")
             return []
         else:
-            logging.error(f"[PASS] doc_id={doc_id} Qty is same. Total:{df_total.qty.sum()}")
+            logger.error(f"[PASS] doc_id={doc_id} Qty is same. Total:{df_total.qty.sum()}")
 
         # Convert to record style
         daily_acquition_results = df_daily.to_dict(orient="records")
 
-        logging.info(f"[DONE] Cleaning. doc_id={doc_id}")
+        logger.info(f"[DONE] Cleaning. doc_id={doc_id}")
         return daily_acquition_results

@@ -1,13 +1,11 @@
 import datetime
-import logging
 import os
 
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Double, DATE, func
 from sqlalchemy.orm import declarative_base
+from edinet_logging import EdinetLogger
 
-logging.basicConfig(filename=os.path.join(os.environ["LOG_PATH"], 'edinet.log'),
-                    encoding='utf-8',
-                    level=logging.INFO)
+logger = EdinetLogger.get_loggger()
 Base = declarative_base()
 
 
@@ -29,7 +27,7 @@ class BuyBackHeadline(Base):
             "id": self.id,
             "edinet_code": self.edinet_code,
             "doc_id": self.doc_id,
-            "filer_name": self.filename,
+            "filer_name": self.filer_name,
             "doc_type_code": self.doc_type_code,
             "submit_datetime": self.submit_datetime,
             "xbrl_flag": self.xbrl_flag,

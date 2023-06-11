@@ -23,8 +23,12 @@ export default async function handler(
             startRow: string;
             endRow: string;
         };
-        const startRowInt = parseInt(startRow)
-        const endRowInt = parseInt(endRow)
+
+        let startRowInt = parseInt(startRow)
+        let endRowInt = parseInt(endRow)
+        console.log(startRowInt)
+        startRowInt = startRowInt || 0
+        endRowInt = endRowInt || 100
 
         const headlines = await prisma.buyback_headline.findMany({
             take: endRowInt - startRowInt,
