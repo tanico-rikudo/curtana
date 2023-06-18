@@ -31,7 +31,6 @@ export default async function handler(
         let endRowInt = parseInt(endRow)
         startRowInt = startRowInt || 0
         endRowInt = endRowInt || 1000
-        console.log("oo" + doc_id + "oo")
 
         const details = await prisma.buyback_detail.findMany({
             // take: endRowInt - startRowInt,

@@ -13,7 +13,7 @@ export default function SideBar() {
                         <ul className="space-y-2 font-medium">
                             <SidebarItem displayName="Headline DashBoard" linkHref="/dashboard" />
                             <SidebarItem displayName="Headline" linkHref="/headline" />
-                            <SidebarItem displayName="GPT" linkHref="#" />
+                            <SidebarItem displayName="GPT" linkHref="/chat" />
                             <SidebarItem displayName="SignIn" linkHref="#" onClick={signIn} />
                             <SidebarItem displayName="SignOut" linkHref="#" onClick={signOut} />
                         </ul>

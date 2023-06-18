@@ -54,9 +54,9 @@ class Edinet:
         return result
 
     def get_detail(self):
-        logger.info(f"[Getting...] Detail in DB")
+        logger.info(f"[Getting...] Detail from headlines")
         result = self.db.get_detail_data()
-        logger.info(f"[DONE] Get Detail from DB")
+        logger.info(f"[DONE] Get Detail")
         return result
 
     def fetch_headlines(self, date):

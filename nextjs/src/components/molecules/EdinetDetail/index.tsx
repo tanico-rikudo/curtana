@@ -7,13 +7,13 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-balham.css';
 
-import {
-    ColDef,
-    GridReadyEvent,
-    IDatasource,
-    IGetRowsParams,
-} from 'ag-grid-community';
-import { fetchDetails } from '@/utils/api';
+// import {
+//     ColDef,
+//     GridReadyEvent,
+//     IDatasource,
+//     IGetRowsParams,
+// } from 'ag-grid-community';
+// import { fetchDetails } from '@/utils/api';
 
 
 // export default function EdinetDetail(detail) {

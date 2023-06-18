@@ -129,3 +129,7 @@ dmypy.json
 .pyre/
 
 node_modules
+data
+
+.idea
+/*.DS_Store

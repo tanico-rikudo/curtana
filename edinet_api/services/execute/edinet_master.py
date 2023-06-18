@@ -6,7 +6,7 @@ logger = EdinetLogger.get_loggger()
 
 def get_detail(date=None):
     edinet_obj = Edinet()
-    result = edinet_obj.get_details()
+    result = edinet_obj.get_detail()
     return result
 
 def get_headlines(date=None):
@@ -44,8 +44,8 @@ def fetch_edinet_buyback_headlines(date):
 
     # get headline
     raw_headlines = edinet_obj.fetch_headlines(date)
-    buyback_headlines = [headline for headline in raw_headlines.get("results") if
-                         edinet_obj.filter_headline(headline, doc_type_code="220")]
+    buyback_headlines = [headline for headline in raw_headlines.get("results")
+                         if edinet_obj.filter_headline(headline, doc_type_code="220")]
     buyback_headlines = [ edinet_obj.clean_headline(headline=headline) for headline in buyback_headlines ]
 
     #save
