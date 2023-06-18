@@ -32,7 +32,7 @@ export default async function handler(
 
 
         const configuration = new Configuration({
-            apiKey: "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",
+            apiKey: process.env.OPENAI_API_KEY,
         });
         const instance = new OpenAIApi(configuration);
         console.log(prompt)
